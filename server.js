@@ -3,7 +3,9 @@ const { ApolloServer, gql, } = require('apollo-server-express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
 
-const {tasks} = require('./constants')
+// Resolvers
+const resolvers = require('./resolvers');
+const typeDefs = require('./typeDefs');
 
 // set env variables
 dotEnv.config();
@@ -16,40 +18,12 @@ app.use(cors());
 // body parser middleware
 app.use(express.json());
 
-const typeDefs = gql`
-  type Query {
-    greetings: [String!]
-    tasks: [Task!]
-  }
-
-  type User {
-    id: ID!
-    name: String!
-    email: String!
-    task: [Task!]
-  }
-
-  type Task {
-    id: ID!
-    name: String!
-    completed: Boolean!
-    user: User!
-  }
-`;
-
-const resolvers = {
-  Query: {
-    greetings: () => null,
-    tasks: () => tasks
-  }
-};
-
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
 });
 
-apolloServer.applyMiddleware({ app, path: '/graphql'});
+apolloServer.applyMiddleware({ app, path: '/graphql' });
 
 const PORT = process.env.PORT || 3000;
 
