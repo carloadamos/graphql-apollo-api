@@ -2,9 +2,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { combineResolvers } = require('graphql-resolvers');
 
-const User = require('../database/models/user')
-const Task = require('../database/models/task')
-const { isAuthenticated } = require('../resolvers/middleware')
+const User = require('../database/models/user');
+const Task = require('../database/models/task');
+const { isAuthenticated } = require('../resolvers/middleware');
+const PubSub = require('../subscription');
+const { userEvents } = require('../subscription/events');
 
 module.exports = {
   Query: {
@@ -37,6 +39,11 @@ module.exports = {
 
         const result = await newUser.save();
 
+        console.log('publish');
+        PubSub.publish(userEvents.USER_CREATED, {
+          userCreated: result
+        });
+
         return result;
       }
       catch (error) {
@@ -66,6 +73,14 @@ module.exports = {
       catch (error) {
         console.log(error);
         throw error;
+      }
+    }
+  },
+  Subscription: {
+    userCreated: {
+      subscribe: () => {
+        console.log('subscription')
+        return PubSub.asyncIterator(userEvents.USER_CREATED)
       }
     }
   },
